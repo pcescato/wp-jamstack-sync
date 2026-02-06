@@ -113,11 +113,10 @@ class Plugin {
 	 * @return void
 	 */
 	private function load_admin(): void {
-		// TODO: Load admin classes when implemented
-		// require_once WPJAMSTACK_PATH . 'admin/class-admin.php';
-		// require_once WPJAMSTACK_PATH . 'admin/class-settings.php';
-		// require_once WPJAMSTACK_PATH . 'admin/class-columns.php';
-		// Admin::init();
+		require_once WPJAMSTACK_PATH . 'admin/class-settings.php';
+		require_once WPJAMSTACK_PATH . 'admin/class-admin.php';
+		
+		\WPJamstack\Admin\Admin::init();
 	}
 
 	/**

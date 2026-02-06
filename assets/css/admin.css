@@ -1,0 +1,20 @@
+/**
+ * WP Jamstack Sync - Admin Styles
+ */
+
+.wpjamstack-test-result {
+	margin-left: 10px;
+	font-weight: 600;
+}
+
+.wpjamstack-test-result.success {
+	color: #46b450;
+}
+
+.wpjamstack-test-result.error {
+	color: #dc3232;
+}
+
+.wpjamstack-test-result.testing {
+	color: #0073aa;
+}
