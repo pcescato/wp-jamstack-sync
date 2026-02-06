@@ -104,7 +104,9 @@ class Hugo_Adapter implements Adapter_Interface {
 	/**
 	 * Convert WordPress content to Markdown
 	 *
-	 * Basic HTML to Markdown conversion using strip_tags.
+	 * Improved HTML to Markdown conversion with better handling
+	 * of common WordPress content patterns.
+	 *
 	 * TODO: Replace with league/html-to-markdown for production.
 	 *
 	 * @param string $content WordPress post content (HTML).
@@ -115,29 +117,107 @@ class Hugo_Adapter implements Adapter_Interface {
 		// Apply WordPress content filters
 		$content = apply_filters( 'the_content', $content );
 
-		// Basic HTML to text conversion
-		// TODO: Implement proper HTML to Markdown conversion
-		$content = strip_tags( $content, '<p><br><strong><em><a><ul><ol><li><h1><h2><h3><h4><h5><h6><blockquote><code><pre>' );
+		// Convert WordPress shortcodes to readable text
+		$content = strip_shortcodes( $content );
 
-		// Basic formatting replacements
-		$content = str_replace( array( '<br>', '<br/>', '<br />' ), "\n", $content );
-		$content = preg_replace( '/<p>(.*?)<\/p>/s', "$1\n\n", $content );
-		$content = preg_replace( '/<strong>(.*?)<\/strong>/', '**$1**', $content );
-		$content = preg_replace( '/<em>(.*?)<\/em>/', '*$1*', $content );
-		$content = preg_replace( '/<h1>(.*?)<\/h1>/', "# $1\n", $content );
-		$content = preg_replace( '/<h2>(.*?)<\/h2>/', "## $1\n", $content );
-		$content = preg_replace( '/<h3>(.*?)<\/h3>/', "### $1\n", $content );
-		$content = preg_replace( '/<h4>(.*?)<\/h4>/', "#### $1\n", $content );
-		$content = preg_replace( '/<h5>(.*?)<\/h5>/', "##### $1\n", $content );
-		$content = preg_replace( '/<h6>(.*?)<\/h6>/', "###### $1\n", $content );
-		$content = preg_replace( '/<a href="(.*?)">(.*?)<\/a>/', '[$2]($1)', $content );
-		$content = preg_replace( '/<blockquote>(.*?)<\/blockquote>/s', "> $1\n", $content );
+		// Handle common WordPress blocks (Gutenberg)
+		$content = $this->convert_gutenberg_blocks( $content );
+
+		// Convert HTML to Markdown
+		$content = $this->html_to_markdown( $content );
 
 		// Clean up extra whitespace
 		$content = preg_replace( '/\n{3,}/', "\n\n", $content );
 		$content = trim( $content );
 
 		return $content;
+	}
+
+	/**
+	 * Convert Gutenberg blocks to Markdown
+	 *
+	 * @param string $content Content with Gutenberg blocks.
+	 *
+	 * @return string Content with blocks converted.
+	 */
+	private function convert_gutenberg_blocks( string $content ): string {
+		// Remove block comments but keep content
+		$content = preg_replace( '/<!-- wp:.*?-->/s', '', $content );
+		$content = preg_replace( '/<!-- \/wp:.*?-->/s', '', $content );
+
+		return $content;
+	}
+
+	/**
+	 * Convert HTML to Markdown
+	 *
+	 * @param string $html HTML content.
+	 *
+	 * @return string Markdown content.
+	 */
+	private function html_to_markdown( string $html ): string {
+		// Convert headings
+		$html = preg_replace( '/<h1[^>]*>(.*?)<\/h1>/is', "\n\n# $1\n\n", $html );
+		$html = preg_replace( '/<h2[^>]*>(.*?)<\/h2>/is', "\n\n## $1\n\n", $html );
+		$html = preg_replace( '/<h3[^>]*>(.*?)<\/h3>/is', "\n\n### $1\n\n", $html );
+		$html = preg_replace( '/<h4[^>]*>(.*?)<\/h4>/is', "\n\n#### $1\n\n", $html );
+		$html = preg_replace( '/<h5[^>]*>(.*?)<\/h5>/is', "\n\n##### $1\n\n", $html );
+		$html = preg_replace( '/<h6[^>]*>(.*?)<\/h6>/is', "\n\n###### $1\n\n", $html );
+
+		// Convert bold and italic
+		$html = preg_replace( '/<(strong|b)[^>]*>(.*?)<\/\1>/is', '**$2**', $html );
+		$html = preg_replace( '/<(em|i)[^>]*>(.*?)<\/\1>/is', '*$2*', $html );
+
+		// Convert links
+		$html = preg_replace_callback(
+			'/<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)<\/a>/is',
+			function( $matches ) {
+				return sprintf( '[%s](%s)', $matches[2], $matches[1] );
+			},
+			$html
+		);
+
+		// Convert images
+		$html = preg_replace_callback(
+			'/<img[^>]+src=["\']([^"\']+)["\'][^>]*alt=["\']([^"\']*)["\'][^>]*\/?>/is',
+			function( $matches ) {
+				return sprintf( '![%s](%s)', $matches[2], $matches[1] );
+			},
+			$html
+		);
+		$html = preg_replace_callback(
+			'/<img[^>]+src=["\']([^"\']+)["\'][^>]*\/?>/is',
+			function( $matches ) {
+				return sprintf( '![](%s)', $matches[1] );
+			},
+			$html
+		);
+
+		// Convert lists
+		$html = preg_replace( '/<ul[^>]*>/is', "\n", $html );
+		$html = preg_replace( '/<\/ul>/is', "\n", $html );
+		$html = preg_replace( '/<ol[^>]*>/is', "\n", $html );
+		$html = preg_replace( '/<\/ol>/is', "\n", $html );
+		$html = preg_replace( '/<li[^>]*>(.*?)<\/li>/is', "- $1\n", $html );
+
+		// Convert blockquotes
+		$html = preg_replace( '/<blockquote[^>]*>(.*?)<\/blockquote>/is', "\n> $1\n", $html );
+
+		// Convert code blocks
+		$html = preg_replace( '/<pre[^>]*><code[^>]*>(.*?)<\/code><\/pre>/is', "\n```\n$1\n```\n", $html );
+		$html = preg_replace( '/<code[^>]*>(.*?)<\/code>/is', '`$1`', $html );
+
+		// Convert line breaks and paragraphs
+		$html = preg_replace( '/<br\s*\/?>/is', "\n", $html );
+		$html = preg_replace( '/<p[^>]*>(.*?)<\/p>/is', "$1\n\n", $html );
+
+		// Remove remaining HTML tags
+		$html = strip_tags( $html );
+
+		// Decode HTML entities
+		$html = html_entity_decode( $html, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+
+		return $html;
 	}
 
 	/**

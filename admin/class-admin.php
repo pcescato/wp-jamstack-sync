@@ -29,8 +29,9 @@ class Admin {
 		add_action( 'admin_menu', array( __CLASS__, 'add_menu_pages' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_scripts' ) );
 
-		// Initialize settings
+		// Initialize settings and columns
 		Settings::init();
+		Columns::init();
 	}
 
 	/**

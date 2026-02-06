@@ -139,15 +139,53 @@ class Settings {
 			$sanitized['github_branch'] = 'main';
 		}
 
-		// Sanitize token (no spaces, alphanumeric + underscore)
+		// Sanitize and encrypt token
 		if ( ! empty( $input['github_token'] ) ) {
-			$sanitized['github_token'] = sanitize_text_field( trim( $input['github_token'] ) );
+			$token = sanitize_text_field( trim( $input['github_token'] ) );
+			$sanitized['github_token'] = self::encrypt_token( $token );
 		}
 
 		// Sanitize debug mode checkbox
 		$sanitized['debug_mode'] = ! empty( $input['debug_mode'] );
 
 		return $sanitized;
+	}
+
+	/**
+	 * Encrypt GitHub token using AES-256-CBC
+	 *
+	 * Uses WordPress salts for encryption key and IV.
+	 *
+	 * @param string $token Plain text token.
+	 *
+	 * @return string Encrypted token (base64 encoded).
+	 */
+	private static function encrypt_token( string $token ): string {
+		$method = 'AES-256-CBC';
+		$key    = hash( 'sha256', wp_salt( 'auth' ), true );
+		$iv     = substr( hash( 'sha256', wp_salt( 'nonce' ), true ), 0, 16 );
+
+		$encrypted = openssl_encrypt( $token, $method, $key, 0, $iv );
+
+		return base64_encode( $encrypted );
+	}
+
+	/**
+	 * Decrypt GitHub token
+	 *
+	 * @param string $encrypted_token Encrypted token (base64 encoded).
+	 *
+	 * @return string Plain text token.
+	 */
+	public static function decrypt_token( string $encrypted_token ): string {
+		$method = 'AES-256-CBC';
+		$key    = hash( 'sha256', wp_salt( 'auth' ), true );
+		$iv     = substr( hash( 'sha256', wp_salt( 'nonce' ), true ), 0, 16 );
+
+		$decoded   = base64_decode( $encrypted_token );
+		$decrypted = openssl_decrypt( $decoded, $method, $key, 0, $iv );
+
+		return $decrypted ? $decrypted : '';
 	}
 
 	/**

@@ -57,11 +57,16 @@ class Git_API {
 	 * Constructor
 	 *
 	 * Loads configuration from WordPress options.
+	 * Decrypts GitHub token for use in API requests.
 	 */
 	public function __construct() {
 		$settings = get_option( 'wpjamstack_settings', array() );
 
-		$this->token  = $settings['github_token'] ?? null;
+		// Decrypt token if present
+		if ( ! empty( $settings['github_token'] ) ) {
+			$this->token = $this->decrypt_token( $settings['github_token'] );
+		}
+
 		$this->repo   = $settings['github_repo'] ?? null;
 		$this->branch = $settings['github_branch'] ?? 'main';
 
@@ -69,6 +74,24 @@ class Git_API {
 		if ( ! empty( $settings['api_base_url'] ) ) {
 			$this->api_base = $settings['api_base_url'];
 		}
+	}
+
+	/**
+	 * Decrypt GitHub token
+	 *
+	 * @param string $encrypted_token Encrypted token.
+	 *
+	 * @return string Decrypted token.
+	 */
+	private function decrypt_token( string $encrypted_token ): string {
+		$method = 'AES-256-CBC';
+		$key    = hash( 'sha256', wp_salt( 'auth' ), true );
+		$iv     = substr( hash( 'sha256', wp_salt( 'nonce' ), true ), 0, 16 );
+
+		$decoded   = base64_decode( $encrypted_token );
+		$decrypted = openssl_decrypt( $decoded, $method, $key, 0, $iv );
+
+		return $decrypted ? $decrypted : '';
 	}
 
 	/**

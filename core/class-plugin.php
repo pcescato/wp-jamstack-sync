@@ -114,6 +114,7 @@ class Plugin {
 	 */
 	private function load_admin(): void {
 		require_once WPJAMSTACK_PATH . 'admin/class-settings.php';
+		require_once WPJAMSTACK_PATH . 'admin/class-columns.php';
 		require_once WPJAMSTACK_PATH . 'admin/class-admin.php';
 		
 		\WPJamstack\Admin\Admin::init();
