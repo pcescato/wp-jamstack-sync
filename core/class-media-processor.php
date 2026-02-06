@@ -1129,7 +1129,7 @@ class Media_Processor {
 	 *
 	 * @return void
 	 */
-	private function cleanup_temp_files( int $post_id ): void {
+	public function cleanup_temp_files( int $post_id ): void {
 		$post_temp_dir = $this->temp_dir . '/' . $post_id;
 
 		if ( ! file_exists( $post_temp_dir ) ) {
