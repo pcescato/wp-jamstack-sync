@@ -112,6 +112,20 @@ class Git_API {
 	}
 
 	/**
+	 * Get standard headers for GitHub API requests
+	 *
+	 * @return array HTTP headers.
+	 */
+	private function get_headers(): array {
+		return array(
+			'Authorization' => 'Bearer ' . $this->token,
+			'Accept'        => 'application/vnd.github+json',
+			'Content-Type'  => 'application/json',
+			'User-Agent'    => 'WP-Jamstack-Sync/' . WPJAMSTACK_VERSION,
+		);
+	}
+
+	/**
 	 * Test API connection and credentials
 	 *
 	 * Verifies:
