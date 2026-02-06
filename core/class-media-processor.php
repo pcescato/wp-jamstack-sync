@@ -99,13 +99,13 @@ class Media_Processor {
 	private function detect_optimal_driver(): string {
 		// Check if Imagick extension is loaded
 		if ( extension_loaded( 'imagick' ) ) {
-			// Verify Imagick class exists
-			if ( class_exists( 'Imagick' ) ) {
+			// Verify Imagick class exists (use global namespace)
+			if ( class_exists( '\Imagick' ) ) {
 				Logger::info(
 					'Imagick extension detected',
 					array(
 						'version'      => phpversion( 'imagick' ),
-						'imagemagick'  => defined( 'Imagick::IMAGICK_EXTNUM' ) ? Imagick::getVersion()['versionString'] : 'unknown',
+						'imagemagick'  => defined( '\Imagick::IMAGICK_EXTNUM' ) ? \Imagick::getVersion()['versionString'] : 'unknown',
 					)
 				);
 				return 'imagick';
