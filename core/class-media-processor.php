@@ -51,15 +51,77 @@ class Media_Processor {
 		$this->git_api = new Git_API();
 		$this->temp_dir = sys_get_temp_dir() . '/wpjamstack-images';
 
-		// Initialize Intervention Image if available
+		// Initialize Intervention Image with optimal driver
 		if ( class_exists( 'Intervention\Image\ImageManager' ) ) {
-			$this->image_manager = new ImageManager( array( 'driver' => 'gd' ) );
+			$driver = $this->detect_optimal_driver();
+			
+			try {
+				$this->image_manager = new ImageManager( array( 'driver' => $driver ) );
+				
+				Logger::info(
+					'Media Processor initialized',
+					array(
+						'driver'           => $driver,
+						'imagick_version'  => extension_loaded( 'imagick' ) ? phpversion( 'imagick' ) : 'N/A',
+						'gd_version'       => extension_loaded( 'gd' ) ? 'available' : 'N/A',
+					)
+				);
+			} catch ( \Exception $e ) {
+				// Fallback to GD if Imagick initialization fails
+				$this->image_manager = new ImageManager( array( 'driver' => 'gd' ) );
+				
+				Logger::warning(
+					'Imagick driver failed, falling back to GD',
+					array(
+						'error'  => $e->getMessage(),
+						'driver' => 'gd',
+					)
+				);
+			}
+		} else {
+			Logger::error( 'Intervention Image library not available' );
 		}
 
 		// Ensure temp directory exists
 		if ( ! file_exists( $this->temp_dir ) ) {
 			wp_mkdir_p( $this->temp_dir );
 		}
+	}
+
+	/**
+	 * Detect optimal image processing driver
+	 *
+	 * Prefers Imagick for better performance and memory efficiency.
+	 * Falls back to GD if Imagick is not available.
+	 *
+	 * @return string Driver name ('imagick' or 'gd').
+	 */
+	private function detect_optimal_driver(): string {
+		// Check if Imagick extension is loaded
+		if ( extension_loaded( 'imagick' ) ) {
+			// Verify Imagick class exists
+			if ( class_exists( 'Imagick' ) ) {
+				Logger::info(
+					'Imagick extension detected',
+					array(
+						'version'      => phpversion( 'imagick' ),
+						'imagemagick'  => defined( 'Imagick::IMAGICK_EXTNUM' ) ? Imagick::getVersion()['versionString'] : 'unknown',
+					)
+				);
+				return 'imagick';
+			}
+		}
+
+		// Fallback to GD
+		Logger::info(
+			'Using GD driver',
+			array(
+				'reason' => 'Imagick extension not available',
+				'gd_available' => extension_loaded( 'gd' ),
+			)
+		);
+		
+		return 'gd';
 	}
 
 	/**
@@ -132,6 +194,133 @@ class Media_Processor {
 		);
 
 		return $url_mappings;
+	}
+
+	/**
+	 * Process post's featured image
+	 *
+	 * Downloads, optimizes, and uploads featured image to GitHub.
+	 * Returns relative path for Hugo front matter.
+	 *
+	 * @param int $post_id Post ID.
+	 *
+	 * @return string|null Relative path to featured image or null if none.
+	 */
+	public function process_featured_image( int $post_id ): ?string {
+		// Check if post has featured image
+		$thumbnail_id = get_post_thumbnail_id( $post_id );
+
+		if ( ! $thumbnail_id ) {
+			Logger::info(
+				'No featured image set for post',
+				array( 'post_id' => $post_id )
+			);
+			return null;
+		}
+
+		Logger::info(
+			'Processing featured image',
+			array(
+				'post_id'      => $post_id,
+				'thumbnail_id' => $thumbnail_id,
+			)
+		);
+
+		// Get full-size image URL
+		$image_data = wp_get_attachment_image_src( $thumbnail_id, 'full' );
+
+		if ( ! $image_data || ! isset( $image_data[0] ) ) {
+			Logger::error(
+				'Failed to get featured image URL',
+				array(
+					'post_id'      => $post_id,
+					'thumbnail_id' => $thumbnail_id,
+				)
+			);
+			return null;
+		}
+
+		$image_url = $image_data[0];
+
+		// Download image
+		$local_path = $this->download_image( $image_url, $post_id );
+
+		if ( is_wp_error( $local_path ) ) {
+			Logger::error(
+				'Failed to download featured image',
+				array(
+					'post_id' => $post_id,
+					'error'   => $local_path->get_error_message(),
+				)
+			);
+			return null;
+		}
+
+		// Generate WebP version with specific filename
+		$webp_path = $this->generate_featured_webp( $local_path, $post_id );
+
+		if ( is_wp_error( $webp_path ) ) {
+			Logger::error(
+				'Failed to generate featured WebP',
+				array(
+					'post_id' => $post_id,
+					'error'   => $webp_path->get_error_message(),
+				)
+			);
+			return null;
+		}
+
+		// Upload to GitHub
+		$github_path = sprintf( 'static/images/%d/featured.webp', $post_id );
+
+		// Check if file already exists
+		$existing_file = $this->git_api->get_file( $github_path );
+		$sha           = null;
+
+		if ( ! is_wp_error( $existing_file ) && isset( $existing_file['sha'] ) ) {
+			$sha = $existing_file['sha'];
+		}
+
+		// Read file content
+		$content = file_get_contents( $webp_path );
+		if ( false === $content ) {
+			Logger::error(
+				'Failed to read featured image file',
+				array( 'post_id' => $post_id )
+			);
+			return null;
+		}
+
+		// Upload to GitHub
+		$commit_message = sprintf( 'Upload featured image for post #%d', $post_id );
+		$result         = $this->git_api->create_or_update_file(
+			$github_path,
+			$content,
+			$commit_message,
+			$sha
+		);
+
+		if ( is_wp_error( $result ) ) {
+			Logger::error(
+				'Failed to upload featured image to GitHub',
+				array(
+					'post_id' => $post_id,
+					'error'   => $result->get_error_message(),
+				)
+			);
+			return null;
+		}
+
+		Logger::success(
+			'Featured image uploaded to GitHub',
+			array(
+				'post_id' => $post_id,
+				'path'    => $github_path,
+			)
+		);
+
+		// Return relative path for Hugo
+		return sprintf( '/images/%d/featured.webp', $post_id );
 	}
 
 	/**
@@ -318,6 +507,47 @@ class Media_Processor {
 			return new \WP_Error(
 				'webp_generation_failed',
 				sprintf( 'WebP generation failed: %s', $e->getMessage() )
+			);
+		}
+	}
+
+	/**
+	 * Generate WebP version of featured image
+	 *
+	 * Similar to generate_webp but uses fixed filename "featured.webp"
+	 *
+	 * @param string $source_path Source image path.
+	 * @param int    $post_id     Post ID.
+	 *
+	 * @return string|\WP_Error WebP file path or WP_Error on failure.
+	 */
+	private function generate_featured_webp( string $source_path, int $post_id ): string|\WP_Error {
+		if ( null === $this->image_manager ) {
+			return new \WP_Error( 'intervention_unavailable', 'Intervention Image not available' );
+		}
+
+		try {
+			$output_path = $this->temp_dir . '/' . $post_id . '/featured.webp';
+
+			$image = $this->image_manager->make( $source_path );
+			$image->encode( 'webp', 85 ); // 85% quality
+			$image->save( $output_path );
+
+			Logger::info(
+				'Generated featured WebP image',
+				array(
+					'post_id' => $post_id,
+					'file'    => 'featured.webp',
+					'size'    => filesize( $output_path ),
+				)
+			);
+
+			return $output_path;
+
+		} catch ( \Exception $e ) {
+			return new \WP_Error(
+				'webp_generation_failed',
+				sprintf( 'Featured WebP generation failed: %s', $e->getMessage() )
 			);
 		}
 	}

@@ -24,13 +24,14 @@ class Hugo_Adapter implements Adapter_Interface {
 	/**
 	 * Convert WordPress post to Hugo Markdown format
 	 *
-	 * @param \WP_Post $post          WordPress post object.
-	 * @param array    $image_mapping Optional. Array mapping original URLs to new paths.
+	 * @param \WP_Post $post                WordPress post object.
+	 * @param array    $image_mapping       Optional. Array mapping original URLs to new paths.
+	 * @param string   $featured_image_path Optional. Processed featured image path.
 	 *
 	 * @return string Complete Markdown content with YAML front matter.
 	 */
-	public function convert( \WP_Post $post, array $image_mapping = array() ): string {
-		$front_matter = $this->get_front_matter( $post );
+	public function convert( \WP_Post $post, array $image_mapping = array(), string $featured_image_path = '' ): string {
+		$front_matter = $this->get_front_matter( $post, $featured_image_path );
 		$content      = $this->convert_content( $post->post_content, $image_mapping );
 
 		// Build YAML front matter
@@ -62,11 +63,12 @@ class Hugo_Adapter implements Adapter_Interface {
 	/**
 	 * Get Hugo front matter metadata
 	 *
-	 * @param \WP_Post $post WordPress post object.
+	 * @param \WP_Post $post                 WordPress post object.
+	 * @param string   $featured_image_path  Optional. Processed featured image path.
 	 *
 	 * @return array Associative array of front matter fields.
 	 */
-	public function get_front_matter( \WP_Post $post ): array {
+	public function get_front_matter( \WP_Post $post, string $featured_image_path = '' ): array {
 		$front_matter = array(
 			'title'       => $post->post_title,
 			'date'        => get_the_date( 'c', $post ),
@@ -93,10 +95,14 @@ class Hugo_Adapter implements Adapter_Interface {
 			$front_matter['author'] = $author->display_name;
 		}
 
-		// Add featured image
-		$featured_image = $this->get_featured_image( $post->ID );
-		if ( $featured_image ) {
-			$front_matter['featured_image'] = $featured_image;
+		// Add featured image (use processed path if provided, otherwise get original)
+		if ( ! empty( $featured_image_path ) ) {
+			$front_matter['image'] = $featured_image_path;
+		} else {
+			$featured_image = $this->get_featured_image( $post->ID );
+			if ( $featured_image ) {
+				$front_matter['image'] = $featured_image;
+			}
 		}
 
 		return $front_matter;

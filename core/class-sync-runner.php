@@ -26,12 +26,13 @@ class Sync_Runner {
 	 *
 	 * Pipeline:
 	 * 1. Validate post exists and is publishable
-	 * 2. Process and optimize images
-	 * 3. Upload images to GitHub
-	 * 4. Convert to Markdown via Hugo adapter (with image path mapping)
-	 * 5. Upload Markdown to GitHub via API
-	 * 6. Update post meta with sync status and timestamp
-	 * 7. Return success metadata or WP_Error
+	 * 2. Process featured image (if set)
+	 * 3. Process content images
+	 * 4. Upload images to GitHub
+	 * 5. Convert to Markdown via Hugo adapter (with image path mapping)
+	 * 6. Upload Markdown to GitHub via API
+	 * 7. Update post meta with sync status and timestamp
+	 * 8. Return success metadata or WP_Error
 	 *
 	 * @param int $post_id Post ID to synchronize.
 	 *
@@ -55,10 +56,13 @@ class Sync_Runner {
 			return new \WP_Error( 'post_not_published', __( 'Only published posts can be synced', 'wp-jamstack-sync' ) );
 		}
 
-		// Process images first
+		// Process featured image first
 		require_once WPJAMSTACK_PATH . 'core/class-media-processor.php';
-		$media_processor = new Media_Processor();
-		$image_mapping   = $media_processor->process_post_images( $post_id, $post->post_content );
+		$media_processor      = new Media_Processor();
+		$featured_image_path  = $media_processor->process_featured_image( $post_id );
+
+		// Process content images
+		$image_mapping = $media_processor->process_post_images( $post_id, $post->post_content );
 
 		if ( is_wp_error( $image_mapping ) ) {
 			Logger::error(
@@ -78,9 +82,9 @@ class Sync_Runner {
 
 		$adapter = new \WPJamstack\Adapters\Hugo_Adapter();
 
-		// Convert to Markdown with image path replacements
+		// Convert to Markdown with image path replacements and featured image
 		try {
-			$content   = $adapter->convert( $post, $image_mapping );
+			$content   = $adapter->convert( $post, $image_mapping, $featured_image_path ?? '' );
 			$file_path = $adapter->get_file_path( $post );
 		} catch ( \Exception $e ) {
 			Logger::error(
