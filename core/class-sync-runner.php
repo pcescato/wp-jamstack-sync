@@ -166,11 +166,13 @@ class Sync_Runner {
 
 		// Save commit URL for monitoring dashboard
 		if ( isset( $result['commit_sha'] ) ) {
-			$settings   = get_option( 'jamstack_settings', array() );
-			$repo       = isset( $settings['repository'] ) ? $settings['repository'] : '';
-			$commit_url = sprintf( 'https://github.com/%s/commit/%s', $repo, $result['commit_sha'] );
-			update_post_meta( $post_id, '_jamstack_last_commit_url', $commit_url );
-			Logger::info( 'Commit URL saved', array( 'post_id' => $post_id, 'url' => $commit_url ) );
+			$settings   = get_option( 'wpjamstack_settings', array() );
+			$repo       = isset( $settings['github_repo'] ) ? $settings['github_repo'] : '';
+			if ( ! empty( $repo ) ) {
+				$commit_url = sprintf( 'https://github.com/%s/commit/%s', $repo, $result['commit_sha'] );
+				update_post_meta( $post_id, '_jamstack_last_commit_url', $commit_url );
+				Logger::info( 'Commit URL saved', array( 'post_id' => $post_id, 'url' => $commit_url ) );
+			}
 		}
 
 		Logger::success( 'Sync completed', array( 'post_id' => $post_id, 'result' => $result ) );
