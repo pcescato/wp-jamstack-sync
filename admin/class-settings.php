@@ -43,6 +43,7 @@ class Settings {
 		add_action( 'wp_ajax_wpjamstack_test_connection', array( __CLASS__, 'ajax_test_connection' ) );
 		add_action( 'wp_ajax_wpjamstack_bulk_sync', array( __CLASS__, 'ajax_bulk_sync' ) );
 		add_action( 'wp_ajax_wpjamstack_get_stats', array( __CLASS__, 'ajax_get_stats' ) );
+		add_action( 'wp_ajax_wpjamstack_sync_single', array( __CLASS__, 'ajax_sync_single' ) );
 	}
 
 	/**
@@ -403,24 +404,74 @@ class Settings {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
+
+		// Get active tab
+		$active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'settings';
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 			
-			<?php settings_errors( self::OPTION_NAME ); ?>
-			
-			<form method="post" action="options.php">
-				<?php
-				settings_fields( self::PAGE_SLUG );
-				do_settings_sections( self::PAGE_SLUG );
-				submit_button();
-				?>
-			</form>
+			<!-- Tab Navigation -->
+			<h2 class="nav-tab-wrapper">
+				<a href="?page=<?php echo esc_attr( self::PAGE_SLUG ); ?>&tab=settings" 
+				   class="nav-tab <?php echo $active_tab === 'settings' ? 'nav-tab-active' : ''; ?>">
+					<?php esc_html_e( 'Settings', 'wp-jamstack-sync' ); ?>
+				</a>
+				<a href="?page=<?php echo esc_attr( self::PAGE_SLUG ); ?>&tab=bulk" 
+				   class="nav-tab <?php echo $active_tab === 'bulk' ? 'nav-tab-active' : ''; ?>">
+					<?php esc_html_e( 'Bulk Operations', 'wp-jamstack-sync' ); ?>
+				</a>
+				<a href="?page=<?php echo esc_attr( self::PAGE_SLUG ); ?>&tab=monitor" 
+				   class="nav-tab <?php echo $active_tab === 'monitor' ? 'nav-tab-active' : ''; ?>">
+					<?php esc_html_e( 'Sync History', 'wp-jamstack-sync' ); ?>
+				</a>
+			</h2>
 
-			<!-- Bulk Sync Section -->
-			<hr>
-			<h2><?php esc_html_e( 'Bulk Operations', 'wp-jamstack-sync' ); ?></h2>
-			<p><?php esc_html_e( 'Synchronize all published posts to GitHub at once.', 'wp-jamstack-sync' ); ?></p>
+			<?php
+			// Render active tab content
+			switch ( $active_tab ) {
+				case 'bulk':
+					self::render_bulk_tab();
+					break;
+				case 'monitor':
+					self::render_monitor_tab();
+					break;
+				case 'settings':
+				default:
+					self::render_settings_tab();
+					break;
+			}
+			?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render settings tab content
+	 *
+	 * @return void
+	 */
+	private static function render_settings_tab(): void {
+		?>
+		<?php settings_errors( self::OPTION_NAME ); ?>
+		
+		<form method="post" action="options.php">
+			<?php
+			settings_fields( self::PAGE_SLUG );
+			do_settings_sections( self::PAGE_SLUG );
+			submit_button();
+			?>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Render bulk operations tab
+	 *
+	 * @return void
+	 */
+	private static function render_bulk_tab(): void {
+		?>
 			
 			<div id="wpjamstack-bulk-sync-section">
 				<button type="button" id="wpjamstack-bulk-sync-button" class="button button-secondary">
@@ -574,7 +625,213 @@ class Settings {
 				100% { transform: rotate(360deg); }
 			}
 			</style>
-		</div>
+		<?php
+	}
+
+	/**
+	 * Render sync history monitor tab
+	 *
+	 * @return void
+	 */
+	private static function render_monitor_tab(): void {
+		?>
+		<h2><?php esc_html_e( 'Sync History', 'wp-jamstack-sync' ); ?></h2>
+		<p><?php esc_html_e( 'View the most recent sync operations and their status.', 'wp-jamstack-sync' ); ?></p>
+
+		<?php
+		// Query posts with sync meta
+		$query = new \WP_Query( array(
+			'post_type'      => array( 'post', 'page' ),
+			'post_status'    => 'any',
+			'posts_per_page' => 20,
+			'orderby'        => 'meta_value',
+			'order'          => 'DESC',
+			'meta_key'       => '_jamstack_sync_last',
+			'meta_query'     => array(
+				array(
+					'key'     => '_jamstack_sync_status',
+					'compare' => 'EXISTS',
+				),
+			),
+		) );
+
+		if ( ! $query->have_posts() ) {
+			?>
+			<div class="notice notice-info">
+				<p><?php esc_html_e( 'No sync history found. Sync a post to see it appear here.', 'wp-jamstack-sync' ); ?></p>
+			</div>
+			<?php
+			return;
+		}
+		?>
+
+		<table class="wp-list-table widefat fixed striped">
+			<thead>
+				<tr>
+					<th scope="col" class="manage-column column-primary" style="width: 40%;">
+						<?php esc_html_e( 'Post Title', 'wp-jamstack-sync' ); ?>
+					</th>
+					<th scope="col" class="manage-column" style="width: 80px;">
+						<?php esc_html_e( 'ID', 'wp-jamstack-sync' ); ?>
+					</th>
+					<th scope="col" class="manage-column" style="width: 100px;">
+						<?php esc_html_e( 'Type', 'wp-jamstack-sync' ); ?>
+					</th>
+					<th scope="col" class="manage-column" style="width: 120px;">
+						<?php esc_html_e( 'Status', 'wp-jamstack-sync' ); ?>
+					</th>
+					<th scope="col" class="manage-column" style="width: 180px;">
+						<?php esc_html_e( 'Last Sync', 'wp-jamstack-sync' ); ?>
+					</th>
+					<th scope="col" class="manage-column" style="width: 120px;">
+						<?php esc_html_e( 'Commit', 'wp-jamstack-sync' ); ?>
+					</th>
+					<th scope="col" class="manage-column" style="width: 120px;">
+						<?php esc_html_e( 'Actions', 'wp-jamstack-sync' ); ?>
+					</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+				while ( $query->have_posts() ) :
+					$query->the_post();
+					$post_id = get_the_ID();
+					$status = get_post_meta( $post_id, '_jamstack_sync_status', true );
+					$last_sync = get_post_meta( $post_id, '_jamstack_sync_last', true );
+					$commit_url = get_post_meta( $post_id, '_jamstack_last_commit_url', true );
+					$post_type = get_post_type( $post_id );
+
+					// Status icon and color
+					$status_icon = '';
+					$status_color = '';
+					$status_label = '';
+
+					switch ( $status ) {
+						case 'success':
+							$status_icon = '●';
+							$status_color = '#46b450';
+							$status_label = __( 'Success', 'wp-jamstack-sync' );
+							break;
+						case 'error':
+							$status_icon = '●';
+							$status_color = '#dc3232';
+							$status_label = __( 'Error', 'wp-jamstack-sync' );
+							break;
+						case 'processing':
+							$status_icon = '◐';
+							$status_color = '#0073aa';
+							$status_label = __( 'Processing', 'wp-jamstack-sync' );
+							break;
+						case 'pending':
+							$status_icon = '○';
+							$status_color = '#f0ad4e';
+							$status_label = __( 'Pending', 'wp-jamstack-sync' );
+							break;
+						default:
+							$status_icon = '○';
+							$status_color = '#999';
+							$status_label = ucfirst( $status );
+							break;
+					}
+
+					// Format last sync time
+					$time_ago = $last_sync ? human_time_diff( strtotime( $last_sync ), current_time( 'timestamp' ) ) . ' ' . __( 'ago', 'wp-jamstack-sync' ) : __( 'Never', 'wp-jamstack-sync' );
+					?>
+					<tr>
+						<td class="column-primary">
+							<strong>
+								<a href="<?php echo esc_url( get_edit_post_link( $post_id ) ); ?>">
+									<?php echo esc_html( get_the_title() ); ?>
+								</a>
+							</strong>
+						</td>
+						<td><?php echo esc_html( $post_id ); ?></td>
+						<td><?php echo esc_html( ucfirst( $post_type ) ); ?></td>
+						<td>
+							<span style="color: <?php echo esc_attr( $status_color ); ?>; font-size: 20px;" title="<?php echo esc_attr( $status_label ); ?>">
+								<?php echo esc_html( $status_icon ); ?>
+							</span>
+							<?php echo esc_html( $status_label ); ?>
+						</td>
+						<td><?php echo esc_html( $time_ago ); ?></td>
+						<td>
+							<?php if ( $commit_url ) : ?>
+								<a href="<?php echo esc_url( $commit_url ); ?>" target="_blank" class="button button-small">
+									<span class="dashicons dashicons-external" style="font-size: 13px; width: 13px; height: 13px;"></span>
+									<?php esc_html_e( 'View Commit', 'wp-jamstack-sync' ); ?>
+								</a>
+							<?php else : ?>
+								<span style="color: #999;">—</span>
+							<?php endif; ?>
+						</td>
+						<td>
+							<button type="button" 
+									class="button button-small wpjamstack-sync-now" 
+									data-post-id="<?php echo esc_attr( $post_id ); ?>"
+									<?php echo $status === 'processing' ? 'disabled' : ''; ?>>
+								<span class="dashicons dashicons-update" style="font-size: 13px; width: 13px; height: 13px;"></span>
+								<?php esc_html_e( 'Sync Now', 'wp-jamstack-sync' ); ?>
+							</button>
+						</td>
+					</tr>
+				<?php endwhile; ?>
+			</tbody>
+		</table>
+
+		<?php wp_reset_postdata(); ?>
+
+		<script>
+		jQuery(document).ready(function($) {
+			$('.wpjamstack-sync-now').on('click', function() {
+				var $button = $(this);
+				var postId = $button.data('post-id');
+				
+				$button.prop('disabled', true).html('<span class="dashicons dashicons-update dashicons-spin"></span> <?php esc_html_e( 'Syncing...', 'wp-jamstack-sync' ); ?>');
+				
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'wpjamstack_sync_single',
+						nonce: '<?php echo esc_js( wp_create_nonce( 'wpjamstack-sync-single' ) ); ?>',
+						post_id: postId
+					},
+					success: function(response) {
+						if (response.success) {
+							$button.html('<span class="dashicons dashicons-yes" style="color: #46b450;"></span> <?php esc_html_e( 'Synced!', 'wp-jamstack-sync' ); ?>');
+							// Reload page after 2 seconds
+							setTimeout(function() {
+								location.reload();
+							}, 2000);
+						} else {
+							$button.html('<span class="dashicons dashicons-no" style="color: #dc3232;"></span> ' + response.data.message);
+							$button.prop('disabled', false);
+							setTimeout(function() {
+								$button.html('<span class="dashicons dashicons-update"></span> <?php esc_html_e( 'Sync Now', 'wp-jamstack-sync' ); ?>');
+							}, 3000);
+						}
+					},
+					error: function() {
+						$button.html('<span class="dashicons dashicons-no"></span> <?php esc_html_e( 'Error', 'wp-jamstack-sync' ); ?>');
+						$button.prop('disabled', false);
+						setTimeout(function() {
+							$button.html('<span class="dashicons dashicons-update"></span> <?php esc_html_e( 'Sync Now', 'wp-jamstack-sync' ); ?>');
+						}, 3000);
+					}
+				});
+			});
+		});
+		</script>
+
+		<style>
+		.dashicons-spin {
+			animation: wpjamstack-spin 1s linear infinite;
+		}
+		@keyframes wpjamstack-spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+		</style>
 		<?php
 	}
 
@@ -647,5 +904,33 @@ class Settings {
 
 		Logger::success( 'Connection test successful' );
 		wp_send_json_success( array( 'message' => __( 'Connection successful!', 'wp-jamstack-sync' ) ) );
+	}
+
+	/**
+	 * AJAX handler for single post sync
+	 *
+	 * @return void
+	 */
+	public static function ajax_sync_single(): void {
+		check_ajax_referer( 'wpjamstack-sync-single', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions', 'wp-jamstack-sync' ) ) );
+		}
+
+		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+
+		if ( ! $post_id ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid post ID', 'wp-jamstack-sync' ) ) );
+		}
+
+		// Enqueue the post for sync
+		require_once WPJAMSTACK_PATH . 'core/class-queue-manager.php';
+		\WPJamstack\Core\Queue_Manager::enqueue( $post_id, 5 ); // High priority
+
+		wp_send_json_success( array(
+			'message' => __( 'Post enqueued for synchronization', 'wp-jamstack-sync' ),
+			'post_id' => $post_id,
+		) );
 	}
 }

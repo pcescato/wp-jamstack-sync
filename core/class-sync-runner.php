@@ -164,6 +164,15 @@ class Sync_Runner {
 		// Cache file path for future deletions
 		update_post_meta( $post_id, '_jamstack_file_path', $file_path );
 
+		// Save commit URL for monitoring dashboard
+		if ( isset( $result['commit_sha'] ) ) {
+			$settings   = get_option( 'jamstack_settings', array() );
+			$repo       = isset( $settings['repository'] ) ? $settings['repository'] : '';
+			$commit_url = sprintf( 'https://github.com/%s/commit/%s', $repo, $result['commit_sha'] );
+			update_post_meta( $post_id, '_jamstack_last_commit_url', $commit_url );
+			Logger::info( 'Commit URL saved', array( 'post_id' => $post_id, 'url' => $commit_url ) );
+		}
+
 		Logger::success( 'Sync completed', array( 'post_id' => $post_id, 'result' => $result ) );
 
 		return array(
