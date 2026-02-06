@@ -1,0 +1,480 @@
+# French (France) translation for Atomic Jamstack Connector
+# Copyright (C) 2026 Pascal CESCATO
+# This file is distributed under the GPL 3+.
+msgid ""
+msgstr ""
+"Project-Id-Version: Atomic Jamstack Connector 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/pcescato/atomic-jamstack-connector/issues\n"
+"POT-Creation-Date: 2026-02-06 21:00+0000\n"
+"PO-Revision-Date: 2026-02-06 21:00+0000\n"
+"Last-Translator: Pascal CESCATO <pascal.cescato@gmail.com>\n"
+"Language-Team: French <>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Manual\n"
+
+
+#: atomic-jamstack-connector.php:95
+#, php-format
+msgid "Atomic Jamstack Connector requires WordPress %s or higher."
+msgstr "Atomic Jamstack Connector nécessite WordPress %s ou supérieur."
+
+
+#: atomic-jamstack-connector.php:104
+#, php-format
+msgid "Atomic Jamstack Connector requires PHP %s or higher."
+msgstr "Atomic Jamstack Connector nécessite PHP %s ou supérieur."
+
+
+#: atomic-jamstack-connector.php:116
+msgid "Plugin Activation Failed"
+msgstr "Échec de l'activation du plugin"
+
+
+#: atomic-jamstack-connector.php:119
+msgid "Return to Plugins"
+msgstr "Retour aux extensions"
+
+
+#: atomic-jamstack-connector.php:120
+msgid "Plugin Activation Error"
+msgstr "Erreur d'activation du plugin"
+
+
+#: admin/class-admin.php:44
+msgid "Jamstack Sync Settings"
+msgstr "Paramètres de synchronisation Jamstack"
+
+
+#: admin/class-admin.php:45
+msgid "Jamstack Sync"
+msgstr "Synchronisation Jamstack"
+
+
+#: admin/class-admin.php:90
+msgid "Testing connection..."
+msgstr "Test de la connexion..."
+
+
+#: admin/class-admin.php:91
+msgid "Connection successful!"
+msgstr "Connexion réussie !"
+
+
+#: admin/class-admin.php:92
+msgid "Connection failed:"
+msgstr "Échec de la connexion :"
+
+
+#: admin/class-columns.php:28
+msgid "Sync Status"
+msgstr "État de synchronisation"
+
+
+#: admin/class-columns.php:121
+msgid "Success"
+msgstr "Succès"
+
+
+#: admin/class-columns.php:124
+msgid "Error"
+msgstr "Erreur"
+
+
+#: admin/class-columns.php:127
+msgid "Processing"
+msgstr "En cours"
+
+
+#: admin/class-columns.php:130
+msgid "Pending"
+msgstr "En attente"
+
+
+#: admin/class-columns.php:133
+msgid "Cancelled"
+msgstr "Annulé"
+
+
+#: admin/class-columns.php:136
+msgid "Deleting"
+msgstr "Suppression"
+
+
+#: admin/class-columns.php:139
+msgid "Deleted"
+msgstr "Supprimé"
+
+
+#: admin/class-columns.php:142
+msgid "Delete Error"
+msgstr "Erreur de suppression"
+
+
+#: admin/class-columns.php:145
+msgid "Unknown"
+msgstr "Inconnu"
+
+
+#: admin/class-columns.php:97
+msgid "Synced"
+msgstr "Synchronisé"
+
+
+#: admin/class-columns.php:97
+msgid "Updated"
+msgstr "Mis à jour"
+
+
+#: admin/class-columns.php:98
+#, php-format
+msgid "%s ago"
+msgstr "il y a %s"
+
+
+#: admin/class-settings.php:65
+msgid "GitHub Settings"
+msgstr "Paramètres GitHub"
+
+
+#: admin/class-settings.php:72
+msgid "Personal Access Token"
+msgstr "Jeton d'accès personnel"
+
+
+#: admin/class-settings.php:80
+msgid "Repository (owner/repo)"
+msgstr "Dépôt (propriétaire/dépôt)"
+
+
+#: admin/class-settings.php:88
+msgid "Branch"
+msgstr "Branche"
+
+
+#: admin/class-settings.php:96
+msgid "Test GitHub Connection"
+msgstr "Tester la connexion GitHub"
+
+
+#: admin/class-settings.php:103
+msgid "Content Types"
+msgstr "Types de contenu"
+
+
+#: admin/class-settings.php:110
+msgid "Synchronize Posts"
+msgstr "Synchroniser les articles"
+
+
+#: admin/class-settings.php:111
+msgid "Automatically sync posts to your Hugo repository"
+msgstr "Synchroniser automatiquement les articles vers votre dépôt Hugo"
+
+
+#: admin/class-settings.php:118
+msgid "Synchronize Pages"
+msgstr "Synchroniser les pages"
+
+
+#: admin/class-settings.php:119
+msgid "Automatically sync pages to your Hugo repository"
+msgstr "Synchroniser automatiquement les pages vers votre dépôt Hugo"
+
+
+#: admin/class-settings.php:150
+msgid "GitHub Personal Access Token with repo permissions"
+msgstr "Jeton d'accès personnel GitHub avec permissions sur le dépôt"
+
+
+#: admin/class-settings.php:167
+msgid "Format: username/repository (e.g., johndoe/my-hugo-site)"
+msgstr "Format : nom_utilisateur/dépôt (ex : johndoe/mon-site-hugo)"
+
+
+#: admin/class-settings.php:184
+msgid "Target branch for commits (default: main)"
+msgstr "Branche cible pour les commits (par défaut : main)"
+
+
+#: admin/class-settings.php:335
+msgid "Invalid settings data"
+msgstr "Données de configuration invalides"
+
+
+#: admin/class-settings.php:352
+msgid "Token cannot be empty"
+msgstr "Le jeton ne peut pas être vide"
+
+
+#: admin/class-settings.php:370
+msgid "Repository cannot be empty"
+msgstr "Le dépôt ne peut pas être vide"
+
+
+#: admin/class-settings.php:372
+msgid "Repository must be in format: owner/repo"
+msgstr "Le dépôt doit être au format : propriétaire/dépôt"
+
+
+#: admin/class-settings.php:386
+msgid "Settings saved"
+msgstr "Paramètres enregistrés"
+
+
+#: admin/class-settings.php:415
+msgid "Settings"
+msgstr "Paramètres"
+
+
+#: admin/class-settings.php:418
+msgid "Bulk Operations"
+msgstr "Opérations en masse"
+
+
+#: admin/class-settings.php:421
+msgid "Sync History"
+msgstr "Historique de synchronisation"
+
+
+#: admin/class-settings.php:473
+msgid "Bulk Sync"
+msgstr "Synchronisation en masse"
+
+
+#: admin/class-settings.php:476
+msgid "Synchronize All Posts"
+msgstr "Synchroniser tous les articles"
+
+
+#: admin/class-settings.php:477
+msgid "This will enqueue all published posts and pages for synchronization."
+msgstr "Ceci va mettre en file d'attente tous les articles et pages publiés pour synchronisation."
+
+
+#: admin/class-settings.php:482
+msgid "Start Bulk Sync"
+msgstr "Démarrer la synchronisation en masse"
+
+
+#: admin/class-settings.php:491
+msgid "Queue Statistics"
+msgstr "Statistiques de la file"
+
+
+#: admin/class-settings.php:495
+msgid "Pending:"
+msgstr "En attente :"
+
+
+#: admin/class-settings.php:500
+msgid "Processing:"
+msgstr "En traitement :"
+
+
+#: admin/class-settings.php:505
+msgid "Failed:"
+msgstr "Échec :"
+
+
+#: admin/class-settings.php:510
+msgid "Success:"
+msgstr "Succès :"
+
+
+#: admin/class-settings.php:638
+msgid "View the most recent sync operations and their status."
+msgstr "Voir les opérations de synchronisation les plus récentes et leur état."
+
+
+#: admin/class-settings.php:661
+msgid "No sync history found. Sync a post to see it appear here."
+msgstr "Aucun historique de synchronisation trouvé. Synchronisez un article pour le voir apparaître ici."
+
+
+#: admin/class-settings.php:672
+msgid "Post Title"
+msgstr "Titre de l'article"
+
+
+#: admin/class-settings.php:675
+msgid "ID"
+msgstr "ID"
+
+
+#: admin/class-settings.php:678
+msgid "Type"
+msgstr "Type"
+
+
+#: admin/class-settings.php:681
+msgid "Status"
+msgstr "État"
+
+
+#: admin/class-settings.php:684
+msgid "Last Sync"
+msgstr "Dernière synchronisation"
+
+
+#: admin/class-settings.php:687
+msgid "Commit"
+msgstr "Commit"
+
+
+#: admin/class-settings.php:690
+msgid "Actions"
+msgstr "Actions"
+
+
+#: admin/class-settings.php:738
+msgid "ago"
+msgstr ""
+
+
+#: admin/class-settings.php:761
+msgid "View Commit"
+msgstr "Voir le commit"
+
+
+#: admin/class-settings.php:773
+msgid "Sync Now"
+msgstr "Synchroniser maintenant"
+
+
+#: admin/class-settings.php:789
+msgid "Syncing..."
+msgstr "Synchronisation..."
+
+
+#: admin/class-settings.php:811
+msgid "Synced!"
+msgstr "Synchronisé !"
+
+
+#: admin/class-settings.php:815
+
+#: admin/class-settings.php:840
+msgid "Insufficient permissions"
+msgstr "Permissions insuffisantes"
+
+
+#: admin/class-settings.php:853
+#, php-format
+msgid "%1$d posts enqueued, %2$d skipped"
+msgstr "%1$d articles mis en file, %2$d ignorés"
+
+
+#: admin/class-settings.php:877
+
+#: admin/class-settings.php:894
+
+#: admin/class-settings.php:906
+
+#: admin/class-settings.php:917
+
+#: admin/class-settings.php:926
+msgid "Invalid post ID"
+msgstr "ID d'article invalide"
+
+
+#: admin/class-settings.php:933
+msgid "Post enqueued for synchronization"
+msgstr "Article mis en file pour synchronisation"
+
+
+#: core/class-git-api.php:146
+msgid "GitHub token is not configured. Please add your token in plugin settings."
+msgstr "Le jeton GitHub n'est pas configuré. Veuillez ajouter votre jeton dans les paramètres du plugin."
+
+
+#: core/class-git-api.php:152
+msgid "GitHub repository is not configured. Please add repository in format: owner/repo"
+msgstr "Le dépôt GitHub n'est pas configuré. Veuillez ajouter le dépôt au format : propriétaire/dépôt"
+
+
+#: core/class-git-api.php:156
+
+#: core/class-git-api.php:174
+#, php-format
+msgid "Failed to connect to GitHub: %s"
+msgstr "Échec de connexion à GitHub : %s"
+
+
+#: core/class-git-api.php:180
+msgid "GitHub token does not have push permission to this repository. Please check token permissions."
+msgstr "Le jeton GitHub n'a pas la permission push sur ce dépôt. Veuillez vérifier les permissions du jeton."
+
+
+#: core/class-git-api.php:185
+msgid "GitHub token is invalid or expired. Please check your token."
+msgstr "Le jeton GitHub est invalide ou expiré. Veuillez vérifier votre jeton."
+
+
+#: core/class-git-api.php:192
+#, php-format
+msgid "GitHub API rate limit exceeded. Resets at: %s UTC"
+msgstr "Limite de taux de l'API GitHub dépassée. Réinitialisation à : %s UTC"
+
+
+#: core/class-git-api.php:196
+#, php-format
+msgid "Access forbidden: %s"
+msgstr "Accès interdit : %s"
+
+
+#: core/class-git-api.php:202
+#, php-format
+msgid "Repository not found: %s. Please check the repository name and your access permissions."
+msgstr "Dépôt introuvable : %s. Veuillez vérifier le nom du dépôt et vos permissions d'accès."
+
+
+#: core/class-git-api.php:207
+#, php-format
+msgid "GitHub API error (HTTP %1$d): %2$s"
+msgstr "Erreur API GitHub (HTTP %1$d) : %2$s"
+
+
+#: core/class-git-api.php:236
+msgid "GitHub configuration missing"
+msgstr "Configuration GitHub manquante"
+
+
+#: core/class-git-api.php:266
+msgid "Invalid API response"
+msgstr "Réponse API invalide"
+
+
+#: core/class-git-api.php:396
+
+#: core/class-git-api.php:560
+
+#: core/class-git-api.php:596
+msgid "Unable to retrieve file SHA for deletion"
+msgstr "Impossible de récupérer le SHA du fichier pour suppression"
+
+
+#: core/class-git-api.php:607
+#, php-format
+
+#: core/class-git-api.php:764
+msgid "GitHub token missing"
+msgstr "Jeton GitHub manquant"
+
+
+#: core/class-sync-runner.php:48
+msgid "Post not found"
+msgstr "Article introuvable"
+
+
+#: core/class-sync-runner.php:56
+msgid "Only published posts can be synced"
+msgstr "Seuls les articles publiés peuvent être synchronisés"
+
+
+#: core/class-sync-runner.php:219
+msgid "Post not found and no cached file path available"
+msgstr "Article introuvable et aucun chemin de fichier en cache disponible"

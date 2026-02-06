@@ -136,6 +136,20 @@ function atomic_jamstack_deactivate() {
 	// (e.g., clear scheduled tasks, flush caches)
 }
 
+/**
+ * Load plugin text domain for translations
+ *
+ * @return void
+ */
+function atomic_jamstack_load_textdomain() {
+	load_plugin_textdomain(
+		'atomic-jamstack-connector',
+		false,
+		dirname( plugin_basename( __FILE__ ) ) . '/languages'
+	);
+}
+add_action( 'plugins_loaded', 'atomic_jamstack_load_textdomain' );
+
 // Register activation/deactivation hooks
 register_activation_hook( __FILE__, 'atomic_jamstack_activate' );
 register_deactivation_hook( __FILE__, 'atomic_jamstack_deactivate' );
